@@ -1,4 +1,4 @@
-name: Build Windows executable
+name: Build executables
 
 on:
   push:
@@ -10,35 +10,76 @@ permissions:
   contents: write   # needed so the workflow can create/attach a Release
 
 jobs:
-  build-windows-exe:
-    runs-on: windows-latest
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            name: windows
+          - os: macos-latest
+            name: macos
+          - os: ubuntu-latest
+            name: linux
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
 
       - name: Set up Python
+        if: matrix.name != 'linux'
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
+      # Ubuntu's hosted Python builds don't reliably ship Tcl/Tk, so the
+      # Linux job uses the system Python (which apt's python3-tk matches)
+      # inside a venv instead of actions/setup-python.
+      - name: Install Tk + venv (Linux only)
+        if: matrix.name == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-tk python3-venv
+          python3 -m venv .venv
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
-          pip install pyinstaller
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install pyinstaller
 
       - name: Build the executable
+        run: python -m PyInstaller --onefile --windowed --name AuldwynPortraitSync dropbox_tga_sync.py
+
+      - name: Package macOS .app bundle into a zip
+        if: matrix.name == 'macos'
         run: |
-          pyinstaller --onefile --windowed --name AuldwynPortraitSync dropbox_tga_sync.py
+          cd dist
+          zip -r AuldwynPortraitSync-macOS.zip AuldwynPortraitSync.app
+
+      - name: Rename + mark Linux binary executable
+        if: matrix.name == 'linux'
+        run: |
+          mv dist/AuldwynPortraitSync dist/AuldwynPortraitSync-linux
+          chmod +x dist/AuldwynPortraitSync-linux
 
       - name: Upload build artifact (always, even without a tag)
         uses: actions/upload-artifact@v4
         with:
-          name: AuldwynPortraitSync-windows
-          path: dist/AuldwynPortraitSync.exe
+          name: AuldwynPortraitSync-${{ matrix.name }}
+          path: |
+            dist/AuldwynPortraitSync.exe
+            dist/AuldwynPortraitSync-macOS.zip
+            dist/AuldwynPortraitSync-linux
+          if-no-files-found: ignore
 
       - name: Publish to a GitHub Release (only when a version tag is pushed)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/AuldwynPortraitSync.exe
+          files: |
+            dist/AuldwynPortraitSync.exe
+            dist/AuldwynPortraitSync-macOS.zip
+            dist/AuldwynPortraitSync-linux
           generate_release_notes: true
