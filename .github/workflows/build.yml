@@ -1,0 +1,44 @@
+name: Build Windows executable
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch: {}   # lets you trigger a build manually from the Actions tab
+
+permissions:
+  contents: write   # needed so the workflow can create/attach a Release
+
+jobs:
+  build-windows-exe:
+    runs-on: windows-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build the executable
+        run: |
+          pyinstaller --onefile --windowed --name AuldwynPortraitSync dropbox_tga_sync.py
+
+      - name: Upload build artifact (always, even without a tag)
+        uses: actions/upload-artifact@v4
+        with:
+          name: AuldwynPortraitSync-windows
+          path: dist/AuldwynPortraitSync.exe
+
+      - name: Publish to a GitHub Release (only when a version tag is pushed)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/AuldwynPortraitSync.exe
+          generate_release_notes: true
