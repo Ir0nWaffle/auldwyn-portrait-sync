@@ -38,8 +38,10 @@ your OS. No Python install needed — everything's bundled in.
 
 ### All platforms
 
-Click **Browse...**, pick where you want the portraits saved, then click
-**Sync Now**.
+The destination defaults to `Documents/Neverwinter Nights/portraits` in your
+user folder (created automatically if it doesn't exist yet) — NWN:EE's
+default portraits folder. Click **Browse...** if you want to save somewhere
+else, then click **Sync Now**. Whatever you pick is remembered for next time.
 
 ## For the repo owner: how the build works
 

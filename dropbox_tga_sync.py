@@ -47,6 +47,7 @@ DROPBOX_SHARE_LINK = (
 )
 
 CONFIG_PATH = Path.home() / ".dropbox_tga_sync_config.json"
+DEFAULT_DESTINATION = Path.home() / "Documents" / "Neverwinter Nights" / "portraits"
 
 
 # ---------------------------------------------------------------------------
@@ -69,7 +70,7 @@ def load_last_destination() -> str:
             return json.loads(CONFIG_PATH.read_text()).get("destination", "")
         except Exception:
             return ""
-    return ""
+    return str(DEFAULT_DESTINATION)
 
 
 def save_last_destination(path: str) -> None:
