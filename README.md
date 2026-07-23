@@ -11,7 +11,7 @@ your OS. No Python install needed — everything's bundled in.
 
 ### Windows
 
-1. Download `AuldwynPortraitSync.exe`.
+1. Download `AuldwynPortraitSync-windows.exe`.
 2. Run it. Windows may show a "protect your PC" SmartScreen warning since
    the app isn't code-signed — click **More info** → **Run anyway**.
 

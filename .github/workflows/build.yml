@@ -64,12 +64,16 @@ jobs:
           mv dist/AuldwynPortraitSync dist/AuldwynPortraitSync-linux
           chmod +x dist/AuldwynPortraitSync-linux
 
+      - name: Rename Windows binary
+        if: matrix.name == 'windows'
+        run: move dist\AuldwynPortraitSync.exe dist\AuldwynPortraitSync-windows.exe
+
       - name: Upload build artifact (always, even without a tag)
         uses: actions/upload-artifact@v4
         with:
           name: AuldwynPortraitSync-${{ matrix.name }}
           path: |
-            dist/AuldwynPortraitSync.exe
+            dist/AuldwynPortraitSync-windows.exe
             dist/AuldwynPortraitSync-macOS.zip
             dist/AuldwynPortraitSync-linux
           if-no-files-found: ignore
@@ -79,7 +83,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/AuldwynPortraitSync.exe
+            dist/AuldwynPortraitSync-windows.exe
             dist/AuldwynPortraitSync-macOS.zip
             dist/AuldwynPortraitSync-linux
           generate_release_notes: true
